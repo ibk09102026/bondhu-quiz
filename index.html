@@ -1,0 +1,224 @@
+
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>বন্ধু চেনার পরীক্ষা ❤️</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#100d20;color:#fff;
+ font-family:system-ui,sans-serif
+}
+main{max-width:600px;margin:auto;padding:20px 15px 40px}
+header{text-align:center;padding:22px 0}
+.logo{font-size:48px}
+h1{color:#ffe16b;font-size:28px;margin:8px 0}
+p{color:#c9c3d8;line-height:1.7}
+.card{
+ background:#201a32;border:1px solid #3d3355;
+ padding:18px;border-radius:18px;margin-bottom:16px
+}
+input,textarea,button{font:inherit;width:100%;border-radius:11px}
+input,textarea{
+ background:#120f20;color:white;border:1px solid #504565;
+ padding:12px;margin:7px 0 13px
+}
+textarea{resize:vertical;min-height:75px}
+label{font-size:14px;color:#e2dcef}
+button{
+ padding:13px;border:0;background:#ffe16b;
+ color:#171224;font-weight:800;margin-top:10px;cursor:pointer
+}
+.secondary{background:#3c3154;color:white}
+.qbox{padding:12px 0;border-bottom:1px solid #403650}
+#play,#result{display:none}
+#sharebox{display:none;margin-top:15px}
+.score{text-align:center;font-size:54px;color:#ffe16b;font-weight:900}
+.small{text-align:center;font-size:12px;color:#9d94b4}
+</style>
+</head>
+<body>
+<main>
+<header>
+ <div class="logo">🫵❤️</div>
+ <h1>বন্ধু চেনার পরীক্ষা</h1>
+ <p>তোমার বন্ধু তোমাকে কতটা চেনে?<br>
+ প্রশ্নের উত্তর দিয়ে প্রমাণ করো!</p>
+</header>
+
+<section id="create">
+ <div class="card">
+  <h2>✨ নিজের কুইজ তৈরি করো</h2>
+  <label>তোমার নাম</label>
+  <input id="owner" maxlength="40" placeholder="তোমার নাম লেখো">
+
+  <div id="builder"></div>
+
+  <button onclick="createQuiz()">আমার কুইজের লিংক বানাও 🔗</button>
+
+  <div id="sharebox">
+   <p>তোমার কুইজ তৈরি হয়েছে! বন্ধুকে এই লিংক পাঠাও 👇</p>
+   <input id="link" readonly>
+   <button onclick="copyLink()">লিংক কপি করো</button>
+  </div>
+ </div>
+</section>
+
+<section id="play">
+ <div class="card">
+  <h2 id="playtitle"></h2>
+  <p>প্রতিটি প্রশ্নের উত্তর নিজের ভাষায় লেখো। কোনো অপশন নেই! 😎</p>
+  <div id="questions"></div>
+  <button onclick="submitAnswers()">উত্তর জমা দাও 🎯</button>
+ </div>
+</section>
+
+<section id="result">
+ <div class="card">
+  <h2 style="text-align:center">তোমার ফলাফল 🎉</h2>
+  <div class="score" id="score"></div>
+  <h3 id="verdict" style="text-align:center"></h3>
+  <p id="resulttext" style="text-align:center"></p>
+  <button onclick="shareResult()">ফলাফল শেয়ার করো 📲</button>
+  <button class="secondary" onclick="location.href=location.pathname">
+   নিজের কুইজ তৈরি করো
+  </button>
+ </div>
+</section>
+
+<p class="small">Made with ❤️ for friends</p>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+let quiz=null;
+
+function escapeHTML(s){
+ return String(s).replace(/[&<>"']/g,c=>({
+  '&':'&amp;','<':'&lt;','>':'&gt;',
+  '"':'&quot;',"'":'&#39;'
+ })[c]);
+}
+
+function buildQuestions(){
+ let html='';
+ for(let i=0;i<5;i++){
+  html+=`
+   <div class="qbox">
+    <b>প্রশ্ন ${i+1}</b>
+    <label>প্রশ্ন লিখো</label>
+    <textarea id="q${i}" maxlength="200"
+     placeholder="যেমন: আমার প্রিয় খেলা কী?"></textarea>
+    <label>সঠিক উত্তর লিখো</label>
+    <input id="a${i}" maxlength="150"
+     placeholder="যেমন: ফুটবল">
+   </div>`;
+ }
+ $('builder').innerHTML=html;
+}
+buildQuestions();
+
+function createQuiz(){
+ const name=$('owner').value.trim();
+ if(!name){alert('আগে তোমার নাম লেখো!');return}
+
+ const qs=[];
+ for(let i=0;i<5;i++){
+  const q=$('q'+i).value.trim();
+  const a=$('a'+i).value.trim();
+  if(!q||!a){
+   alert('সব প্রশ্ন এবং সঠিক উত্তর পূরণ করো।');return;
+  }
+  qs.push({q,a});
+ }
+
+ quiz={name,qs};
+ const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(quiz))));
+ const url=location.href.split('?')[0]+'?quiz='+encoded;
+ $('link').value=url;
+ $('sharebox').style.display='block';
+}
+
+async function copyLink(){
+ try{
+  await navigator.clipboard.writeText($('link').value);
+  alert('লিংক কপি হয়েছে! বন্ধুকে পাঠাও ❤️');
+ }catch(e){
+  $('link').select();
+  alert('লিংকটি সিলেক্ট করে Copy করো।');
+ }
+}
+
+function loadQuiz(){
+ const encoded=new URLSearchParams(location.search).get('quiz');
+ if(!encoded)return;
+
+ try{
+  quiz=JSON.parse(decodeURIComponent(escape(atob(encoded))));
+  if(!quiz.name||!Array.isArray(quiz.qs)||quiz.qs.length!==5)
+   throw Error('Invalid quiz');
+
+  $('create').style.display='none';
+  $('play').style.display='block';
+  $('playtitle').textContent=quiz.name+'-কে কতটা চেনো?';
+
+  $('questions').innerHTML=quiz.qs.map((item,i)=>`
+   <div class="qbox">
+    <b>${i+1}. ${escapeHTML(item.q)}</b>
+    <textarea id="ans${i}" maxlength="200"
+     placeholder="তোমার উত্তর লেখো..."></textarea>
+   </div>`).join('');
+ }catch(e){
+  alert('কুইজের লিংকটি সঠিক নয়।');
+ }
+}
+
+function normalize(s){
+ return String(s).trim().toLocaleLowerCase('bn')
+  .replace(/[।.!?,،؟]/g,'')
+  .replace(/\s+/g,' ');
+}
+
+function submitAnswers(){
+ let points=0;
+ for(let i=0;i<quiz.qs.length;i++){
+  const ans=$('ans'+i).value.trim();
+  if(!ans){
+   alert('সব প্রশ্নের উত্তর লেখো!');return;
+  }
+  if(normalize(ans)===normalize(quiz.qs[i].a))points++;
+ }
+
+ $('play').style.display='none';
+ $('result').style.display='block';
+ $('score').textContent=points+'/5';
+ $('verdict').textContent=points===5
+  ?'অসাধারণ! একদম কাছের বন্ধু 🏆'
+  :points>=3?'বেশ ভালো চেনো! 😎':'আরও জানা বাকি! 😂';
+
+ $('resulttext').textContent=
+  'আমি '+quiz.name+'-কে ৫টির মধ্যে '+points+
+  'টি প্রশ্নে সঠিক চিনেছি!';
+ window.myScore=points;
+ window.scrollTo(0,0);
+}
+
+async function shareResult(){
+ const message='🔥 আমি '+quiz.name+'-কে ৫টির মধ্যে '+
+  window.myScore+'টি প্রশ্নে সঠিক চিনেছি! ❤️';
+ if(navigator.share){
+  try{await navigator.share({title:'বন্ধু চেনার পরীক্ষা',text:message});return}
+  catch(e){}
+ }
+ try{
+  await navigator.clipboard.writeText(message);
+  alert('ফলাফল কপি হয়েছে!');
+ }catch(e){alert(message)}
+}
+loadQuiz();
+</script>
+</body>
+  </html>
+  
